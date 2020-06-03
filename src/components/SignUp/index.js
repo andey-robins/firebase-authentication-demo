@@ -45,7 +45,6 @@ class SignUpFormBase extends Component {
     }
 
     render() {
-
         const isInvalid = 
             this.state.passwordOne !== this.state.passwordTwo ||
             this.state.passwordOne === '' ||
