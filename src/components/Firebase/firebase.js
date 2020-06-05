@@ -23,6 +23,7 @@ class Firebase {
     //
     // authentication api hookups
     //
+
     doCreateUserWithEmailAndPassword = (email, password) => {
         return this.auth.createUserWithEmailAndPassword(email, password);
     }
@@ -46,9 +47,41 @@ class Firebase {
     //
     // user database api hookups
     //
+
     user = uid => this.db.ref(`users/${uid}`);
 
     users = () => this.db.ref('users');
+
+    //
+    // merge auth and db user api
+    //
+
+    onAuthUserListener = (next, fallback) =>
+        this.auth.onAuthStateChanged(authUser => {
+            if (authUser) {
+                this.user(authUser.uid)
+                    .once('value')
+                    .then(snapshot => {
+                        const dbUser = snapshot.val();
+
+                        // default create empty roles
+                        if (!dbUser.roles) {
+                            dbUser.roles = {};
+                        }
+
+                        // merge auth and db user
+                        authUser = {
+                            uid: authUser.uid,
+                            email: authUser.email,
+                            ...dbUser,
+                        };
+
+                        next(authUser);
+                    });
+            } else {
+                fallback();
+            }
+        });
 }
 
 export default Firebase;

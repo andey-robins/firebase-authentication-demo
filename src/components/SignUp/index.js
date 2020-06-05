@@ -3,6 +3,7 @@ import { Link, withRouter } from 'react-router-dom';
 
 import { withFirebase } from '../Firebase';
 import * as ROUTES from '../../constants/routes';
+import * as ROLES from '../../constants/roles';
 
 const SignUpPage = () => (
     <div>
@@ -16,6 +17,7 @@ const INITIAL_STATE = {
     email: '',
     passwordOne: '',
     passwordTwo: '',
+    isAdmin: false,
     error: null,
 };
 
@@ -27,6 +29,12 @@ class SignUpFormBase extends Component {
     }
 
     onSubmit = (event) => {
+        const roles = {};
+
+        if (this.state.isAdmin) {
+            roles[ROLES.ADMIN] = ROLES.ADMIN;
+        }
+
         this.props.firebase
             .doCreateUserWithEmailAndPassword(this.state.email, this.state.passwordOne)
             .then(authUser => {
@@ -35,6 +43,7 @@ class SignUpFormBase extends Component {
                     .set({
                         username: this.state.username,
                         email: this.state.email,
+                        roles: roles,
                     });
             })
             .then(authUser => {
@@ -50,6 +59,10 @@ class SignUpFormBase extends Component {
 
     onChange = (event) => {
         this.setState({ [event.target.name]: event.target.value });
+    }
+
+    onChangeCheckbox = event => {
+        this.setState({ [event.target.name]: event.target.checked });
     }
 
     render() {
@@ -89,6 +102,15 @@ class SignUpFormBase extends Component {
                     type="password"
                     placeholder="Confirm Password"
                 />
+                <label>
+                    Admin:
+                    <input
+                        name="isAdmin"
+                        type="checkbox"
+                        checked={this.state.isAdmin}
+                        onChange={this.onChangeCheckbox}
+                    />
+                </label>
                 <button disabled={isInvalid} type="submit">Sign Up</button>
                 
                 {this.state.error && <p>{this.state.error.message}</p>}
